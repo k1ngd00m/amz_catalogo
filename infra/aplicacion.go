@@ -43,6 +43,6 @@ func Start() {
 
 	app.Mount("/catalogo/comand", restComandoProducto.Routes())
 
-	http.ListenAndServe(":3000", app)
+	http.ListenAndServe(":3200", app)
 
 }
