@@ -9,7 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func GetDBConexion() *sql.DB {
+func GetWriteDBConexion() *sql.DB {
 
 	serverName := os.Getenv("DBCATALOGO_SERVER_WRITE")
 	username := os.Getenv("DBCATALOGO_USER_WRITE")

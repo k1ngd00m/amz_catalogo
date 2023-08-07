@@ -12,7 +12,7 @@ type ManejadorRegistrarProducto struct {
 }
 
 func NewManejadorRegistarProducto(servicio *servicio.ServicioRegistrarProducto) ManejadorRegistrarProducto {
-	return *&ManejadorRegistrarProducto{
+	return ManejadorRegistrarProducto{
 		servicioRegistarProducto: *servicio,
 	}
 }

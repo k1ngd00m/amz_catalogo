@@ -19,18 +19,29 @@ func Start() {
 
 	log := config.GetLogger()
 
-	// inicializar conexion a rdms
-	db := config.GetDBConexion()
+	// inicializar conexion a rdms write
+	dbWrite := config.GetWriteDBConexion()
 	log.Info("conexion a write catalogo db existosa")
 
+	// inicializar conexion a rdms read
+	dbRead := config.GetReadDBConexion()
+	log.Info("conexion a read catalogo db existosa")
+
+	// inicializar rabbitMQ
+	broker := config.GetRabbitMqConn()
+
 	// iniciando adaptadores
-	dependencias := adaptador.NewAdaptador(db)
+	dependencias := adaptador.NewAdaptador(dbWrite, dbRead, broker)
 
 	// servicios
-	servicioRegistrarProducto := servicio.NewServicioRegistarProducto(*dependencias.RepositorioProducto)
+	servicioRegistrarProducto := servicio.NewServicioRegistarProducto(*dependencias.RepositorioProducto, *dependencias.EventoRegistrarProducto)
+	servicioActualizarProducto := servicio.NewServicioActualizarProducto(dependencias.RepositorioProducto, dependencias.EventoActualizarProducto)
+	servicioBuscarProducto := servicio.NewServicioBuscarProducto(*dependencias.DaoProducto)
 
 	// manejadores
 	manejadorRegistrarProducto := manejador.NewManejadorRegistarProducto(&servicioRegistrarProducto)
+	manejadorActualizarProducto := manejador.NewManejadorActualizarProducto(&servicioActualizarProducto)
+	manejadorBuscarProducto := manejador.NewManejadorBuscarProducto(&servicioBuscarProducto)
 
 	app := chi.NewRouter()
 
@@ -39,9 +50,11 @@ func Start() {
 
 	handlerExcepcion := rest.NewHandlerExcepcion(log)
 
-	restComandoProducto := rest.NewRestComandoOrden(&handlerExcepcion, &manejadorRegistrarProducto)
+	restComandoProducto := rest.NewRestComandoOrden(&handlerExcepcion, &manejadorRegistrarProducto, &manejadorActualizarProducto)
+	restQueryProducto := rest.NewRestQueryProducto(&handlerExcepcion, &manejadorBuscarProducto)
 
 	app.Mount("/catalogo/comand", restComandoProducto.Routes())
+	app.Mount("/catalogo/query", restQueryProducto.Routes())
 
 	http.ListenAndServe(":3200", app)
 
